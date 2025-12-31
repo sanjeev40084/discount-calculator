@@ -154,13 +154,13 @@
         <label for="price">Original Price</label>
         <div class="input-wrapper">
             <span class="symbol left" aria-hidden="true">$</span>
-            <input type="number" id="price" class="has-left-icon" placeholder="0.00" inputmode="decimal" autocomplete="off">
+            <input type="number" id="price" class="has-left-icon" placeholder="0.00" inputmode="decimal" autocomplete="off" onfocus="this.select()">
         </div>
     </div>
     <div class="input-group">
         <label for="discount">Discount Percentage</label>
         <div class="input-wrapper">
-            <input type="number" id="discount" class="has-right-icon" placeholder="0" max="100" inputmode="decimal" autocomplete="off">
+            <input type="number" id="discount" class="has-right-icon" placeholder="0" max="100" inputmode="decimal" autocomplete="off" onfocus="this.select()">
             <span class="symbol right" aria-hidden="true">%</span>
         </div>
         <div class="range-wrapper">
@@ -179,7 +179,7 @@
     <div id="tax-section" class="input-group">
         <label for="tax-input">Tax Rate (%)</label>
         <div class="input-wrapper">
-            <input type="number" id="tax-input" class="has-right-icon" value="7.0" inputmode="decimal" autocomplete="off">
+            <input type="number" id="tax-input" class="has-right-icon" value="7.0" inputmode="decimal" autocomplete="off" onfocus="this.select()">
             <span class="symbol right" aria-hidden="true">%</span>
         </div>
     </div>
@@ -281,9 +281,15 @@
     priceInput.addEventListener('input', calculate);
     taxInput.addEventListener('input', calculate);
     resetBtn.addEventListener('click', () => {
-        priceInput.value = ''; discountInput.value = ''; discountSlider.value = 0;
-        if (taxToggle.checked) taxInput.value = '7.0';
-        calculate(); priceInput.focus();
+        priceInput.value = '';
+        discountInput.value = '';
+        discountSlider.value = 0;
+        
+        // REMOVED: if (taxToggle.checked) taxInput.value = '7.0';
+        // Now the tax rate stays whatever the user typed last time.
+        
+        calculate();
+        priceInput.focus();
     });
 </script>
 
