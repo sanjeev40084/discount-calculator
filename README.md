@@ -2,6 +2,8 @@
 
 A clean, modern, and privacy-focused discount calculator built for mobile web. It works offline, supports Dark Mode, and includes sales tax calculations.
 
+**[🔗 Live Demo](https://sanjeev40084.github.io/discount-calculator/)**
+
 ## ✨ Features
 
 - **Mobile First:** Optimized for touch with large targets and numeric keypads (`inputmode="decimal"`).
