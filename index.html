@@ -2,50 +2,100 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    
     <title>Discount Calculator</title>
-    
     <meta name="apple-mobile-web-app-title" content="Discount Calc">
-    <link rel="manifest" href="manifest.json">
     
-    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" sizes="180x180" href="icon-192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
-    <meta name="theme-color" content="#f4f6f9">
+    <meta name="theme-color" content="#ffffff">
     <meta name="description" content="A secure, accessible offline discount calculator.">
 
     <style>
-        /* --- ALL CSS REMAINS THE SAME AS BEFORE --- */
         :root {
-            --bg-body: #f4f6f9; --bg-card: #ffffff; --text-main: #32325d;
-            --text-sub: #525f7f; --accent: #5e72e4; --input-bg: #fcfcfc;
-            --input-border: #e9ecef; --result-bg: #f8f9fe; --result-border: #f0f2f5;
+            /* Light Theme Variables */
+            --bg-body: #f4f6f9;
+            --bg-card: #ffffff;
+            --text-main: #32325d;
+            --text-sub: #525f7f;
+            --accent: #5e72e4;
+            --input-bg: #fcfcfc;
+            --input-border: #e9ecef;
+            --result-bg: #f8f9fe;
+            --result-border: #f0f2f5;
             --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
             --focus-ring: 0 0 0 3px rgba(94, 114, 228, 0.4);
         }
+
         [data-theme="dark"] {
-            --bg-body: #121212; --bg-card: #1e1e1e; --text-main: #ffffff;
-            --text-sub: #b0b0b0; --accent: #778bf5; --input-bg: #2d2d2d;
-            --input-border: #404040; --result-bg: #252525; --result-border: #333333;
+            /* Dark Theme Variables */
+            --bg-body: #121212; /* Traditionally darker for contrast */
+            --bg-card: #1e1e1e; /* Slightly lighter surface */
+            --text-main: #ffffff;
+            --text-sub: #b0b0b0;
+            --accent: #778bf5;
+            --input-bg: #2d2d2d;
+            --input-border: #404040;
+            --result-bg: #252525;
+            --result-border: #333333;
             --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
             --focus-ring: 0 0 0 3px rgba(119, 139, 245, 0.4);
         }
+
         * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-body); color: var(--text-main);
-            display: flex; align-items: center; justify-content: center;
-            min-height: 100vh; padding: 1rem; transition: background-color 0.3s ease;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;     /* Centers vertically on Desktop */
+            justify-content: center; /* Centers horizontally */
+            min-height: 100vh;
+            padding: 1rem;
+            transition: background-color 0.3s ease;
         }
+
+        /* --- THE FIX: NATIVE MOBILE FEEL --- */
+        /* If screen is small (Mobile), remove the "Card" look and go Full Screen */
+        @media (max-width: 600px) {
+            body {
+                padding: 0;
+                align-items: flex-start; /* Start from top */
+                background-color: var(--bg-card); /* Match card so it looks seamless */
+            }
+            .app-container {
+                max-width: 100% !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                min-height: 100vh;
+                
+                /* Handle Notches and Gesture Bars safely */
+                padding-top: max(2rem, env(safe-area-inset-top)) !important;
+                padding-bottom: max(2rem, env(safe-area-inset-bottom)) !important;
+                padding-left: 1.5rem;
+                padding-right: 1.5rem;
+            }
+        }
+
         .app-container {
-            background: var(--bg-card); width: 100%; max-width: 380px;
-            padding: 2rem 1.5rem; border-radius: 24px; box-shadow: var(--shadow);
+            background: var(--bg-card);
+            width: 100%;
+            max-width: 380px;
+            padding: 2rem 1.5rem;
+            border-radius: 24px;
+            box-shadow: var(--shadow);
         }
+
+        /* Header */
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
         h1 { font-size: 1.4rem; font-weight: 700; }
         
-        /* Toggle Switch */
+        /* Toggle */
         .theme-toggle { position: relative; display: inline-block; width: 50px; height: 26px; }
         .theme-toggle input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; border-radius: 34px; transition: .4s; }
@@ -153,16 +203,14 @@
 </main>
 
 <script>
-    /* --- PWA: Register Service Worker --- */
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./sw.js')
-                .then(reg => console.log('Service Worker Registered!', reg))
-                .catch(err => console.log('SW Registration Failed:', err));
+                .then(reg => console.log('SW Registered'))
+                .catch(err => console.log('SW Error:', err));
         });
     }
 
-    /* --- App Logic --- */
     const priceInput = document.getElementById('price');
     const discountInput = document.getElementById('discount');
     const discountSlider = document.getElementById('discount-slider');
@@ -179,9 +227,17 @@
     function setTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
         localStorage.setItem('theme', theme);
+        
+        // FIX 2: Set theme-color to match the CARD background (#ffffff or #1e1e1e)
+        // This makes the status bar blend in perfectly on mobile
         const metaThemeColor = document.querySelector("meta[name=theme-color]");
-        metaThemeColor.setAttribute("content", theme === 'dark' ? '#121212' : '#f4f6f9');
+        if (theme === 'dark') {
+            metaThemeColor.setAttribute("content", '#1e1e1e');
+        } else {
+            metaThemeColor.setAttribute("content", '#ffffff');
+        }
     }
+
     const savedTheme = localStorage.getItem('theme');
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
