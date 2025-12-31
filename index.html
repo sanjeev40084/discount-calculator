@@ -29,12 +29,13 @@
             --result-border: #f0f2f5;
             --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
             --focus-ring: 0 0 0 3px rgba(94, 114, 228, 0.4);
+            --icon-color: #32325d; /* Color for the Sun/Moon icon */
         }
 
         [data-theme="dark"] {
             /* Dark Theme Variables */
-            --bg-body: #121212; /* Traditionally darker for contrast */
-            --bg-card: #1e1e1e; /* Slightly lighter surface */
+            --bg-body: #121212;
+            --bg-card: #1e1e1e;
             --text-main: #ffffff;
             --text-sub: #b0b0b0;
             --accent: #778bf5;
@@ -44,6 +45,7 @@
             --result-border: #333333;
             --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
             --focus-ring: 0 0 0 3px rgba(119, 139, 245, 0.4);
+            --icon-color: #ffffff;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -53,28 +55,25 @@
             background-color: var(--bg-body);
             color: var(--text-main);
             display: flex;
-            align-items: center;     /* Centers vertically on Desktop */
-            justify-content: center; /* Centers horizontally */
+            align-items: center;
+            justify-content: center;
             min-height: 100vh;
             padding: 1rem;
             transition: background-color 0.3s ease;
         }
 
-        /* --- THE FIX: NATIVE MOBILE FEEL --- */
-        /* If screen is small (Mobile), remove the "Card" look and go Full Screen */
+        /* Mobile Full Screen Mode */
         @media (max-width: 600px) {
             body {
                 padding: 0;
-                align-items: flex-start; /* Start from top */
-                background-color: var(--bg-card); /* Match card so it looks seamless */
+                align-items: flex-start;
+                background-color: var(--bg-card);
             }
             .app-container {
                 max-width: 100% !important;
                 border-radius: 0 !important;
                 box-shadow: none !important;
                 min-height: 100vh;
-                
-                /* Handle Notches and Gesture Bars safely */
                 padding-top: max(2rem, env(safe-area-inset-top)) !important;
                 padding-bottom: max(2rem, env(safe-area-inset-bottom)) !important;
                 padding-left: 1.5rem;
@@ -93,16 +92,25 @@
 
         /* Header */
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
-        h1 { font-size: 1.4rem; font-weight: 700; }
+        h1 { font-size: 1.4rem; font-weight: 700; margin: 0; }
         
-        /* Toggle */
-        .theme-toggle { position: relative; display: inline-block; width: 50px; height: 26px; }
-        .theme-toggle input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; border-radius: 34px; transition: .4s; }
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; border-radius: 50%; transition: .4s; }
-        input:checked + .slider { background-color: var(--accent); }
-        input:checked + .slider:before { transform: translateX(24px); }
-        input:focus + .slider { box-shadow: var(--focus-ring); }
+        /* NEW: Theme Icon Button */
+        .theme-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--icon-color);
+            transition: background 0.2s, transform 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .theme-btn:hover { background-color: rgba(128, 128, 128, 0.1); }
+        .theme-btn:active { transform: scale(0.95); }
+        .theme-btn svg { width: 24px; height: 24px; fill: currentColor; }
 
         /* Inputs */
         .input-group { margin-bottom: 1.5rem; }
@@ -110,20 +118,38 @@
         .input-wrapper { position: relative; display: flex; align-items: center; }
         .symbol { position: absolute; color: var(--text-sub); font-weight: 500; pointer-events: none; }
         .symbol.left { left: 1rem; } .symbol.right { right: 1rem; }
-        input[type="number"] { width: 100%; height: 52px; padding: 0 1rem; border: 2px solid var(--input-border); border-radius: 12px; font-size: 1.2rem; font-weight: 600; background: var(--input-bg); color: var(--text-main); outline: none; transition: border-color 0.2s; }
+        
+        input[type="number"] {
+            width: 100%; height: 52px; padding: 0 1rem;
+            border: 2px solid var(--input-border); border-radius: 12px;
+            font-size: 1.2rem; font-weight: 600;
+            background: var(--input-bg); color: var(--text-main);
+            outline: none; transition: border-color 0.2s;
+        }
         input[type="number"]:focus { border-color: var(--accent); box-shadow: var(--focus-ring); }
-        input[type="number"].has-left-icon { padding-left: 2rem; } input[type="number"].has-right-icon { padding-right: 2.5rem; }
+        input[type="number"].has-left-icon { padding-left: 2rem; }
+        input[type="number"].has-right-icon { padding-right: 2.5rem; }
 
-        /* Range */
+        /* Range Slider */
         .range-wrapper { margin-top: 1rem; padding: 0 5px; }
         input[type="range"] { -webkit-appearance: none; width: 100%; background: transparent; outline: none; }
         input[type="range"]:focus { box-shadow: var(--focus-ring); border-radius: 4px; }
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: var(--accent); cursor: pointer; margin-top: -10px; }
         input[type="range"]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: var(--input-border); border-radius: 2px; }
 
-        /* Tax Section */
+        /* Tax Section - Toggle */
         .tax-toggle-row { display: flex; align-items: center; justify-content: space-between; margin-top: 2rem; padding-top: 1rem; border-top: 1px dashed var(--input-border); }
         #tax-section { display: none; margin-top: 1rem; animation: slideDown 0.3s ease-out forwards; }
+        
+        /* The existing CSS toggle for Tax remains */
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider-round { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; border-radius: 34px; transition: .4s; }
+        .slider-round:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: .4s; }
+        input:checked + .slider-round { background-color: var(--accent); }
+        input:checked + .slider-round:before { transform: translateX(20px); }
+        input:focus + .slider-round { box-shadow: var(--focus-ring); }
+
         @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Results */
@@ -144,10 +170,8 @@
 <main class="app-container">
     <div class="header">
         <h1>Calculator</h1>
-        <label class="theme-toggle" aria-label="Toggle Dark Mode">
-            <input type="checkbox" id="theme-switch">
-            <span class="slider" aria-hidden="true"></span>
-        </label>
+        <button id="theme-btn" class="theme-btn" aria-label="Toggle Dark Mode">
+            </button>
     </div>
 
     <div class="input-group">
@@ -170,10 +194,10 @@
     </div>
 
     <div class="tax-toggle-row">
-        <label for="tax-toggle">Add Sales Tax?</label>
-        <label class="theme-toggle" style="width: 40px; height: 24px;">
+        <label for="tax-toggle" style="cursor:pointer">Add Sales Tax?</label>
+        <label class="switch">
             <input type="checkbox" id="tax-toggle">
-            <span class="slider"></span>
+            <span class="slider-round"></span>
         </label>
     </div>
     <div id="tax-section" class="input-group">
@@ -195,7 +219,7 @@
         </div>
         <div class="result-row">
             <span class="label-text">Total Payable</span>
-            <span class="value-text final-price" id="final-price">$0.00</span>
+            <span class="value-text final-price" id="final-price" style="cursor: pointer" title="Tap to copy">$0.00</span>
         </div>
     </div>
 
@@ -203,6 +227,11 @@
 </main>
 
 <script>
+    // --- 1. SVG Icons ---
+    const SUN_ICON = `<svg viewBox="0 0 24 24"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></svg>`;
+    const MOON_ICON = `<svg viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg>`;
+
+    // --- 2. Service Worker ---
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./sw.js')
@@ -211,6 +240,7 @@
         });
     }
 
+    // --- 3. Elements ---
     const priceInput = document.getElementById('price');
     const discountInput = document.getElementById('discount');
     const discountSlider = document.getElementById('discount-slider');
@@ -222,29 +252,41 @@
     const finalPriceDisplay = document.getElementById('final-price');
     const amountSavedDisplay = document.getElementById('amount-saved');
     const resetBtn = document.getElementById('reset-btn');
-    const themeSwitch = document.getElementById('theme-switch');
+    const themeBtn = document.getElementById('theme-btn');
 
+    // --- 4. Theme Logic (Updated for Icon) ---
     function setTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
         localStorage.setItem('theme', theme);
         
-        // FIX 2: Set theme-color to match the CARD background (#ffffff or #1e1e1e)
-        // This makes the status bar blend in perfectly on mobile
+        // Update Status Bar Color
         const metaThemeColor = document.querySelector("meta[name=theme-color]");
         if (theme === 'dark') {
             metaThemeColor.setAttribute("content", '#1e1e1e');
+            themeBtn.innerHTML = SUN_ICON; // In dark mode, show Sun (to switch to light)
         } else {
             metaThemeColor.setAttribute("content", '#ffffff');
+            themeBtn.innerHTML = MOON_ICON; // In light mode, show Moon (to switch to dark)
         }
     }
 
+    // Init Theme
     const savedTheme = localStorage.getItem('theme');
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    let currentTheme = 'light';
+    
     if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
-        themeSwitch.checked = true; setTheme('dark');
-    } else { setTheme('light'); }
-    themeSwitch.addEventListener('change', (e) => setTheme(e.target.checked ? 'dark' : 'light'));
+        currentTheme = 'dark';
+    }
+    setTheme(currentTheme);
 
+    // Toggle Button Listener
+    themeBtn.addEventListener('click', () => {
+        currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+        setTheme(currentTheme);
+    });
+
+    // --- 5. Calculation Logic ---
     taxToggle.addEventListener('change', (e) => {
         taxSection.style.display = e.target.checked ? 'block' : 'none';
         taxResultRow.style.display = e.target.checked ? 'flex' : 'none';
@@ -280,17 +322,38 @@
     discountSlider.addEventListener('input', (e) => { discountInput.value = e.target.value; calculate(); });
     priceInput.addEventListener('input', calculate);
     taxInput.addEventListener('input', calculate);
+
+    // --- 6. Reset Logic (Smart Reset) ---
     resetBtn.addEventListener('click', () => {
-        priceInput.value = '';
-        discountInput.value = '';
+        priceInput.value = ''; 
+        discountInput.value = ''; 
         discountSlider.value = 0;
-        
-        // REMOVED: if (taxToggle.checked) taxInput.value = '7.0';
-        // Now the tax rate stays whatever the user typed last time.
-        
-        calculate();
+        // Note: We do NOT reset tax input value anymore
+        calculate(); 
         priceInput.focus();
     });
+
+    // --- 7. Clipboard Logic ---
+    finalPriceDisplay.addEventListener('click', () => {
+        const textToCopy = finalPriceDisplay.textContent;
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                showToast('Copied!');
+            });
+        }
+    });
+
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.textContent = message;
+        toast.style.cssText = `position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; z-index: 1000; opacity: 0; transition: opacity 0.3s;`;
+        document.body.appendChild(toast);
+        requestAnimationFrame(() => { toast.style.opacity = '1'; });
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => document.body.removeChild(toast), 300);
+        }, 2000);
+    }
 </script>
 
 </body>
