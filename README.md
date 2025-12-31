@@ -17,7 +17,7 @@ Because this is a PWA with a Service Worker, you cannot simply open `index.html`
 
 1. **Clone the repo:**
 
-    git clone [https://github.com/your-username/discount-calculator.git](https://github.com/your-username/discount-calculator.git)
+    git clone [https://github.com/sanjeev40084/discount-calculator.git](https://github.com/sanjeev40084/discount-calculator.git)
 
 2. **Navigate to the folder:**
 
@@ -40,7 +40,7 @@ This project is static (HTML/CSS/JS only), so it is perfect for **GitHub Pages**
 1. Go to your repository **Settings**.
 2. Click **Pages** on the left sidebar.
 3. Under "Branch", select `main` and click **Save**.
-4. GitHub will give you a live URL (e.g., `https://sanjeev40084.github.io/discount-calculator`).
+4. GitHub will give you a live URL (e.g., `https://your-username.github.io/discount-calculator`).
 5. Open that URL on your phone to install the app!
 
 ## 📂 Project Structure
