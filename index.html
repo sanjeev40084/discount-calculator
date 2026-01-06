@@ -17,24 +17,16 @@
 
     <style>
         :root {
-            /* Palette extracted from the screenshot */
-            --bg-body: #121e25;        /* Deep dark blue/black */
-            --bg-hero: #004b49;        /* Teal hero card */
-            --bg-card: #28333e;        /* Dark blue/grey cards */
-            --bg-keypad-btn: #1e2a32;  /* Slightly darker btn */
+            --bg-body: #121e25;
+            --bg-hero: #004b49;
+            --bg-card: #28333e;
+            --bg-keypad-btn: #1e2a32;
             --text-main: #ffffff;
             --text-muted: #8498a3;
-            --accent: #53d0ec;         /* Bright cyan text for contrast */
-            --accent-soft: rgba(83, 208, 236, 0.2);
-            --focus-ring: 0 0 0 3px rgba(83, 208, 236, 0.5);
+            --accent: #53d0ec;
+            --accent-fill: rgba(83, 208, 236, 0.15); /* Background fill for sliders */
+            --focus-border: 2px solid #53d0ec;
             --radius: 16px;
-        }
-
-        /* Accessibilty: Focus visibility */
-        *:focus-visible {
-            outline: none;
-            box-shadow: var(--focus-ring);
-            z-index: 10;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -44,13 +36,13 @@
             background-color: var(--bg-body);
             color: var(--text-main);
             height: 100vh;
-            overflow: hidden; /* Prevent scrolling */
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             padding: env(safe-area-inset-top) 1rem env(safe-area-inset-bottom) 1rem;
+            user-select: none; /* Prevent text selection during sliding */
         }
 
-        /* --- LAYOUT GRID --- */
         .app-container {
             display: flex;
             flex-direction: column;
@@ -66,14 +58,19 @@
         .hero-card {
             background-color: var(--bg-hero);
             border-radius: var(--radius);
-            flex: 0 0 auto; /* Don't stretch */
+            flex: 0 0 auto;
             padding: 1.5rem;
             text-align: center;
             display: flex;
             flex-direction: column;
             justify-content: center;
             box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            border: 2px solid transparent; /* Reserve space for focus border */
+            transition: border-color 0.2s;
+            cursor: pointer;
         }
+        
+        .hero-card.active { border: var(--focus-border); }
 
         .hero-label {
             color: rgba(255,255,255,0.7);
@@ -87,11 +84,10 @@
             font-size: 3.5rem;
             font-weight: 700;
             color: #ffffff;
-            /* Monospace numbers prevent jumping when typing */
-            font-variant-numeric: tabular-nums; 
+            font-variant-numeric: tabular-nums;
         }
 
-        /* --- 2. INFO GRID (2x2) --- */
+        /* --- 2. INFO GRID --- */
         .info-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -102,13 +98,36 @@
         .card {
             background-color: var(--bg-card);
             border-radius: var(--radius);
-            padding: 1rem;
+            height: 120px; /* Fixed height for consistent touch targets */
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             text-align: center;
             position: relative;
+            overflow: hidden; /* Contains the fill bar */
+            border: 2px solid transparent;
+            transition: border-color 0.2s;
+        }
+
+        .card.interactive { cursor: ew-resize; touch-action: none; /* Prevents scroll while dragging */ }
+        .card.active { border: var(--focus-border); }
+
+        /* The Liquid Fill Background */
+        .fill-bar {
+            position: absolute;
+            left: 0; bottom: 0; top: 0;
+            width: 0%; /* JS will update this */
+            background-color: var(--accent-fill);
+            z-index: 0;
+            pointer-events: none;
+            transition: width 0.05s linear; /* Smooth visual update */
+        }
+
+        .card-content {
+            position: relative;
+            z-index: 1; /* Sits on top of fill bar */
+            pointer-events: none; /* Let clicks pass through to the card container */
         }
 
         .card label {
@@ -116,6 +135,7 @@
             font-size: 0.85rem;
             margin-bottom: 0.5rem;
             font-weight: 600;
+            display: block;
         }
 
         .card-value {
@@ -125,62 +145,30 @@
             font-variant-numeric: tabular-nums;
         }
         
-        /* Highlight result values */
+        /* Large Number Display for Discount/Tax */
+        .big-number {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--accent);
+            line-height: 1;
+        }
+        .percent-symbol {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            vertical-align: super;
+        }
+
         .result-text { color: var(--text-main); }
         .accent-text { color: var(--accent); }
 
-        /* Inputs inside cards (Hidden native appearance, styled custom) */
-        .input-bare {
-            background: transparent;
-            border: none;
-            color: var(--accent);
-            font-size: 1.5rem;
-            font-weight: 700;
-            text-align: center;
-            width: 60px;
-            padding: 0;
-            -moz-appearance: textfield;
-        }
-        .input-bare:focus {
-            background: rgba(255,255,255,0.05);
-            border-radius: 4px;
-        }
-        .input-row {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .percent-symbol {
-            color: var(--text-muted);
-            font-size: 1rem;
-            margin-left: 2px;
-        }
-
-        /* Custom Slider (Mini) */
-        input[type=range] {
-            -webkit-appearance: none;
-            width: 80%;
-            background: transparent;
-            margin-top: 8px;
-        }
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 12px; width: 12px;
-            border-radius: 50%;
-            background: var(--accent);
-            margin-top: -4px;
-        }
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%; height: 4px;
-            cursor: pointer;
-            background: rgba(255,255,255,0.1);
-            border-radius: 2px;
-        }
-
-        /* Tax Toggle (Mini Switch) */
-        .mini-switch {
+        /* Mini Toggle Switch for Tax */
+        .mini-switch-wrapper {
             position: absolute;
             top: 10px; right: 10px;
+            z-index: 2; /* Clickable */
+        }
+        .mini-switch {
+            position: relative; display: block;
             width: 24px; height: 14px;
         }
         .mini-switch input { opacity: 0; width: 0; height: 0; }
@@ -200,13 +188,13 @@
         input:checked + .mini-slider { background-color: var(--accent); }
         input:checked + .mini-slider:before { transform: translateX(10px); }
 
-        /* --- 3. KEYPAD (Bottom) --- */
+        /* --- 3. KEYPAD --- */
         .keypad {
-            flex: 1; /* Takes remaining space */
+            flex: 1;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 0.8rem;
-            margin-top: auto; /* Push to bottom */
+            margin-top: auto;
             padding-bottom: 1rem;
         }
 
@@ -222,60 +210,78 @@
             justify-content: center;
             cursor: pointer;
             transition: background 0.1s;
-            user-select: none;
         }
         .key-btn:active { background-color: #384550; }
-        
         .key-ac { color: #ff6b6b; font-size: 1.4rem; font-weight: 700; }
         .key-back svg { width: 28px; height: 28px; fill: var(--text-main); }
+
+        /* Toast for Copy */
+        .toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: var(--accent); color: #000; font-weight: 700;
+            padding: 8px 16px; border-radius: 20px; z-index: 100;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
     </style>
 </head>
 <body>
 
 <main class="app-container">
 
-    <section class="hero-card" aria-label="Original Price Display">
+    <div id="toast" class="toast">Copied!</div>
+
+    <section id="card-price" class="hero-card active" onclick="setFocus('price')" role="button" aria-label="Bill Total">
         <div class="hero-label">Bill Total</div>
-        <div class="hero-value" id="display-price">0.00</div>
+        <div class="hero-value" id="disp-price">0.00</div>
     </section>
 
     <section class="info-grid">
         
-        <div class="card">
-            <label for="discount-input">Discount</label>
-            <div class="input-row">
-                <input type="number" id="discount-input" class="input-bare" value="0" min="0" max="100" onfocus="this.select()">
-                <span class="percent-symbol">%</span>
+        <div id="card-discount" class="card interactive" onclick="setFocus('discount')" role="slider" aria-label="Discount Percentage">
+            <div class="fill-bar" id="fill-discount"></div>
+            <div class="card-content">
+                <label>Discount</label>
+                <div class="big-number">
+                    <span id="disp-discount">0</span><span class="percent-symbol">%</span>
+                </div>
             </div>
-            <input type="range" id="discount-slider" min="0" max="100" value="0" aria-label="Discount slider">
-        </div>
-
-        <div class="card" aria-live="polite">
-            <label>You Save</label>
-            <div class="card-value accent-text" id="display-saved">0.00</div>
         </div>
 
         <div class="card">
-            <label for="tax-input">Tax</label>
-            <label class="mini-switch" aria-label="Toggle Tax">
-                <input type="checkbox" id="tax-toggle">
-                <span class="mini-slider"></span>
-            </label>
+            <div class="card-content">
+                <label>You Save</label>
+                <div class="card-value accent-text" id="disp-saved">0.00</div>
+            </div>
+        </div>
+
+        <div id="card-tax" class="card interactive" onclick="setFocus('tax')" role="slider" aria-label="Tax Rate">
+            <div class="fill-bar" id="fill-tax"></div>
             
-            <div class="input-row" id="tax-container" style="opacity: 0.3; transition: opacity 0.3s;">
-                <input type="number" id="tax-input" class="input-bare" value="7.0" onfocus="this.select()">
-                <span class="percent-symbol">%</span>
+            <div class="mini-switch-wrapper" onclick="event.stopPropagation()">
+                <label class="mini-switch">
+                    <input type="checkbox" id="tax-toggle">
+                    <span class="mini-slider"></span>
+                </label>
+            </div>
+
+            <div class="card-content" id="tax-content" style="opacity: 0.3;">
+                <label>Tax</label>
+                <div class="big-number">
+                    <span id="disp-tax">7</span><span class="percent-symbol">%</span>
+                </div>
             </div>
         </div>
 
-        <div class="card" aria-live="polite">
-            <label>Total</label>
-            <div class="card-value result-text" id="display-total">0.00</div>
+        <div class="card" onclick="copyTotal()" style="cursor: pointer">
+            <div class="card-content">
+                <label>Total</label>
+                <div class="card-value result-text" id="disp-total">0.00</div>
+            </div>
         </div>
 
     </section>
 
-    <section class="keypad" aria-label="Numeric Keypad">
+    <section class="keypad">
         <button class="key-btn" onclick="pressKey('7')">7</button>
         <button class="key-btn" onclick="pressKey('8')">8</button>
         <button class="key-btn" onclick="pressKey('9')">9</button>
@@ -285,9 +291,9 @@
         <button class="key-btn" onclick="pressKey('1')">1</button>
         <button class="key-btn" onclick="pressKey('2')">2</button>
         <button class="key-btn" onclick="pressKey('3')">3</button>
-        <button class="key-btn key-ac" onclick="pressKey('AC')" aria-label="Clear All">AC</button>
+        <button class="key-btn key-ac" onclick="pressKey('AC')">AC</button>
         <button class="key-btn" onclick="pressKey('0')">0</button>
-        <button class="key-btn key-back" onclick="pressKey('BACK')" aria-label="Backspace">
+        <button class="key-btn key-back" onclick="pressKey('BACK')">
             <svg viewBox="0 0 24 24"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.88 1.59.88h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/></svg>
         </button>
     </section>
@@ -295,104 +301,174 @@
 </main>
 
 <script>
-    // --- STATE MANAGEMENT ---
-    let rawPrice = ""; // Stores the typed string (e.g. "1250" -> 12.50)
+    // --- STATE ---
+    // 'price', 'discount', or 'tax'
+    let activeField = 'price'; 
+    
+    // Data values (Strings to handle keypad typing easily)
+    let state = {
+        price: "",       // "1250" -> 12.50
+        discount: "0",   // "25" -> 25%
+        tax: "7"         // "7" -> 7%
+    };
 
     // --- ELEMENTS ---
-    const elPrice = document.getElementById('display-price');
-    const elSaved = document.getElementById('display-saved');
-    const elTotal = document.getElementById('display-total');
-    
-    const inpDiscount = document.getElementById('discount-input');
-    const sldDiscount = document.getElementById('discount-slider');
-    
-    const togTax = document.getElementById('tax-toggle');
-    const inpTax = document.getElementById('tax-input');
-    const boxTax = document.getElementById('tax-container');
+    const els = {
+        priceCard: document.getElementById('card-price'),
+        discCard: document.getElementById('card-discount'),
+        taxCard: document.getElementById('card-tax'),
+        
+        price: document.getElementById('disp-price'),
+        discount: document.getElementById('disp-discount'),
+        tax: document.getElementById('disp-tax'),
+        saved: document.getElementById('disp-saved'),
+        total: document.getElementById('disp-total'),
+        
+        fillDisc: document.getElementById('fill-discount'),
+        fillTax: document.getElementById('fill-tax'),
+        
+        taxToggle: document.getElementById('tax-toggle'),
+        taxContent: document.getElementById('tax-content'),
+        toast: document.getElementById('toast')
+    };
+
+    // --- FOCUS LOGIC ---
+    function setFocus(field) {
+        activeField = field;
+        
+        // Update Visuals (Border highlight)
+        els.priceCard.classList.toggle('active', field === 'price');
+        els.discCard.classList.toggle('active', field === 'discount');
+        els.taxCard.classList.toggle('active', field === 'tax');
+
+        // If switching to Price, don't clear. If switching to Disc/Tax, 
+        // we might want to overwrite if user types immediately? 
+        // For now, standard behavior: just append.
+    }
 
     // --- KEYPAD LOGIC ---
     function pressKey(key) {
+        let currentVal = state[activeField];
+
         if (key === 'AC') {
-            rawPrice = "";
+            state[activeField] = "";
+            if (activeField === 'discount' || activeField === 'tax') state[activeField] = "0";
         } else if (key === 'BACK') {
-            rawPrice = rawPrice.slice(0, -1);
+            state[activeField] = currentVal.slice(0, -1);
+            if (state[activeField] === "" && activeField !== 'price') state[activeField] = "0";
         } else {
-            // Limit to 9 digits to prevent overflow
-            if (rawPrice.length < 9) {
-                // Ignore leading zeros
-                if (rawPrice === "" && key === "0") return;
-                rawPrice += key;
+            // Typing Numbers
+            if (activeField === 'price') {
+                if (currentVal.length < 9) state.price += key;
+            } else {
+                // Discount/Tax (Limit to 100)
+                let nextVal = (currentVal === "0" ? "" : currentVal) + key;
+                if (parseInt(nextVal) <= 100) state[activeField] = nextVal;
             }
         }
         updateUI();
     }
 
-    // --- CALCULATION LOGIC ---
+    // --- CALCULATION & RENDER ---
     function updateUI() {
-        // Convert raw string to currency float (implicit /100)
-        // e.g., "123" -> 1.23
-        let price = rawPrice ? parseInt(rawPrice) / 100 : 0;
-        
-        let discountPct = parseFloat(inpDiscount.value) || 0;
-        let taxPct = parseFloat(inpTax.value) || 0;
-
-        // Validation bounds
-        if (discountPct < 0) discountPct = 0;
-        if (discountPct > 100) discountPct = 100;
+        // Parse Values
+        let p = state.price ? parseInt(state.price) / 100 : 0;
+        let d = parseInt(state.discount) || 0;
+        let t = parseInt(state.tax) || 0;
 
         // Math
-        let saved = price * (discountPct / 100);
-        let afterDiscount = price - saved;
+        let saved = p * (d / 100);
+        let subtotal = p - saved;
         
         let taxAmt = 0;
-        if (togTax.checked) {
-            taxAmt = afterDiscount * (taxPct / 100);
-            boxTax.style.opacity = '1';
+        let taxOn = els.taxToggle.checked;
+        if (taxOn) {
+            taxAmt = subtotal * (t / 100);
+            els.taxContent.style.opacity = '1';
         } else {
-            boxTax.style.opacity = '0.3';
+            els.taxContent.style.opacity = '0.3';
         }
 
-        let total = afterDiscount + taxAmt;
+        let total = subtotal + taxAmt;
 
-        // Render
-        const fmt = new Intl.NumberFormat('en-US', {
-            style: 'decimal', 
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
+        // Render Text
+        const fmt = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        
+        els.price.textContent = fmt.format(p);
+        els.discount.textContent = d;
+        els.tax.textContent = t;
+        els.saved.textContent = fmt.format(saved);
+        els.total.textContent = fmt.format(total);
 
-        elPrice.textContent = fmt.format(price);
-        elSaved.textContent = fmt.format(saved);
-        elTotal.textContent = fmt.format(total);
+        // Render Fill Bars
+        els.fillDisc.style.width = d + '%';
+        els.fillTax.style.width = t + '%';
     }
 
-    // --- EVENT LISTENERS ---
+    // --- SCRUBBING (TOUCH SLIDER) LOGIC ---
+    function setupScrubber(element, field) {
+        let startX = 0;
+        let startVal = 0;
+        let isDragging = false;
 
-    // 1. Discount Slider <-> Input Sync
-    inpDiscount.addEventListener('input', (e) => {
-        let val = e.target.value;
-        if (val > 100) val = 100;
-        sldDiscount.value = val || 0;
-        updateUI();
-    });
+        // Touch Start
+        element.addEventListener('touchstart', (e) => {
+            // If tapping the mini-toggle, ignore
+            if(e.target.closest('.mini-switch-wrapper')) return;
 
-    sldDiscount.addEventListener('input', (e) => {
-        inpDiscount.value = e.target.value;
-        updateUI();
-    });
+            setFocus(field); // Activate card
+            startX = e.touches[0].clientX;
+            startVal = parseInt(state[field]) || 0;
+            isDragging = false;
+        }, { passive: false });
 
-    // 2. Tax Toggle & Input
-    togTax.addEventListener('change', updateUI);
-    inpTax.addEventListener('input', updateUI);
+        // Touch Move
+        element.addEventListener('touchmove', (e) => {
+            const currentX = e.touches[0].clientX;
+            const deltaX = currentX - startX;
 
-    // 3. Service Worker Registration (Retain PWA)
+            // Threshold to start dragging (prevent accidental drags on taps)
+            if (Math.abs(deltaX) > 5) isDragging = true;
+            
+            if (isDragging) {
+                e.preventDefault(); // Stop scrolling
+                
+                // Sensitivity: 1% per 2 pixels
+                let change = Math.round(deltaX / 2); 
+                let newVal = startVal + change;
+
+                // Clamping
+                if (newVal < 0) newVal = 0;
+                if (newVal > 100) newVal = 100;
+
+                state[field] = newVal.toString();
+                updateUI();
+            }
+        }, { passive: false });
+    }
+
+    // Initialize Scrubbers
+    setupScrubber(els.discCard, 'discount');
+    setupScrubber(els.taxCard, 'tax');
+
+    // --- EXTRAS ---
+    els.taxToggle.addEventListener('change', updateUI);
+
+    function copyTotal() {
+        const text = els.total.textContent;
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(text);
+            els.toast.style.opacity = '1';
+            setTimeout(() => els.toast.style.opacity = '0', 2000);
+        }
+    }
+
+    // Service Worker
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js').catch(() => {});
-        });
+        window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
     }
 
-    // Initial render
+    // Init
     updateUI();
 
 </script>
