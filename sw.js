@@ -1,4 +1,4 @@
-const CACHE_NAME = 'discount-calc-v7';
+const CACHE_NAME = 'discount-calc-v8';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -26,4 +26,5 @@ self.addEventListener('fetch', (e) => {
             return response || fetch(e.request);
         })
     );
+
 });
