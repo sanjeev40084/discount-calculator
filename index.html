@@ -12,23 +12,23 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-    <meta name="theme-color" content="#121e25">
+    <meta name="theme-color" content="#fbbf24">
     <meta name="description" content="A secure, accessible offline discount calculator.">
 
     <style>
         :root {
             --bg-body: #121e25;
-            --bg-hero: #004b49;
-            --bg-card: #28333e;
-            --bg-keypad-btn: #1e2a32;
+            --bg-card: #1e2a32;
+            --bg-keypad-btn: #28333e;
+            
+            --hero-bg: #fbbf24; /* Amber Hero */
+            --hero-text: #1a1a1a; /* Dark text for contrast on Amber */
+            
             --text-main: #ffffff;
             --text-muted: #8498a3;
             --accent: #53d0ec;
-            --accent-fill: rgba(83, 208, 236, 0.15);
-            --success: #34d399; 
-            --pay-color: #fbbf24;
-            --focus-border: 2px solid #53d0ec;
-            --radius: 16px;
+            
+            --radius: 24px;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -41,191 +41,203 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            padding: env(safe-area-inset-top) 1rem env(safe-area-inset-bottom) 1rem;
             user-select: none;
         }
 
-        .app-container {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            max-width: 450px;
-            margin: 0 auto;
-            width: 100%;
-            gap: 1rem;
-            padding-top: 1rem;
-        }
-
-        /* --- 1. HERO SECTION (Price) --- */
-        .hero-card {
-            background-color: var(--bg-hero);
-            border-radius: var(--radius);
-            flex: 0 0 auto;
-            padding: 1.5rem;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            border: 2px solid transparent;
-            transition: border-color 0.2s;
-            cursor: pointer;
-        }
-        
-        .hero-card.active { border: var(--focus-border); }
-
-        .hero-label {
-            color: rgba(255,255,255,0.7);
-            font-size: 0.9rem;
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .hero-value {
-            font-size: 3.5rem;
-            font-weight: 700;
-            color: #ffffff;
-            font-variant-numeric: tabular-nums;
-        }
-
-        /* --- 2. INFO GRID --- */
-        .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.8rem;
-            flex: 0 0 auto;
-        }
-
-        .card {
-            background-color: var(--bg-card);
-            border-radius: var(--radius);
-            height: 120px;
+        /* --- 1. HERO SECTION (Top 35%) --- */
+        .hero-section {
+            background-color: var(--hero-bg);
+            color: var(--hero-text);
+            flex: 0 0 32%; /* Takes top 1/3 */
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            text-align: center;
+            border-bottom-left-radius: 32px;
+            border-bottom-right-radius: 32px;
+            padding: env(safe-area-inset-top) 1rem 1rem 1rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 10;
             position: relative;
-            overflow: hidden;
-            border: 2px solid transparent;
-            transition: border-color 0.2s;
+            cursor: pointer;
         }
 
-        .card.interactive { cursor: ew-resize; touch-action: none; }
-        .card.active { border: var(--focus-border); }
-
-        .fill-bar {
-            position: absolute; left: 0; bottom: 0; top: 0; width: 0%;
-            background-color: var(--accent-fill); z-index: 0; pointer-events: none;
-            transition: width 0.05s linear;
+        .hero-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
         }
 
-        .card-content {
-            position: relative; z-index: 1; pointer-events: none;
+        .hero-total {
+            font-size: 4rem;
+            font-weight: 800;
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+            margin-bottom: 0.5rem;
         }
 
-        .card label {
-            color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.5rem; font-weight: 600; display: block;
-        }
-
-        .card-value {
-            font-size: 1.5rem; font-weight: 700; color: var(--text-main); font-variant-numeric: tabular-nums;
+        .hero-badge {
+            background-color: rgba(0,0,0,0.1);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
         
-        .big-number { font-size: 2.2rem; font-weight: 700; color: var(--accent); line-height: 1; }
-        .percent-symbol { font-size: 1.2rem; color: var(--text-muted); vertical-align: super; }
+        /* --- 2. INPUT LIST (Middle) --- */
+        .input-list {
+            flex: 1;
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            overflow-y: auto; /* Allow scroll if screen is tiny */
+        }
 
-        .result-text { color: var(--text-main); }
+        .row-card {
+            background-color: var(--bg-card);
+            border-radius: 16px;
+            padding: 0 1.2rem;
+            height: 72px; /* Compact rows */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .row-card.active {
+            border-color: var(--accent);
+            background-color: #23303a;
+        }
+
+        .row-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .row-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .row-symbol { font-size: 1rem; color: var(--text-muted); }
         .accent-text { color: var(--accent); }
-        .success-text { color: var(--success); }
-        .pay-text { color: var(--pay-color); }
 
-        /* Mini Toggle Switch for Tax */
-        .mini-switch-wrapper {
-            position: absolute; top: 10px; right: 10px; z-index: 2;
+        /* The Liquid Fill for Discount/Tax rows */
+        .row-card.interactive {
+            position: relative;
+            overflow: hidden;
+            touch-action: none;
         }
-        .mini-switch {
-            position: relative; display: block; width: 24px; height: 14px;
+        .fill-bar {
+            position: absolute; left: 0; top: 0; bottom: 0; width: 0%;
+            background: rgba(83, 208, 236, 0.1);
+            z-index: 0;
+            pointer-events: none;
         }
-        .mini-switch input { opacity: 0; width: 0; height: 0; }
-        .mini-slider {
-            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #4a555e; border-radius: 34px; transition: .4s;
-        }
-        .mini-slider:before {
-            position: absolute; content: ""; height: 10px; width: 10px; left: 2px; bottom: 2px; background-color: white; border-radius: 50%; transition: .4s;
-        }
-        input:checked + .mini-slider { background-color: var(--accent); }
-        input:checked + .mini-slider:before { transform: translateX(10px); }
+        .row-content { position: relative; z-index: 1; display: flex; width: 100%; justify-content: space-between; align-items: center; }
 
-        /* --- 3. KEYPAD --- */
+        /* --- 3. KEYPAD (Bottom) --- */
         .keypad {
-            flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin-top: auto; padding-bottom: 1rem;
+            background-color: var(--bg-body);
+            padding: 0 1rem max(1rem, env(safe-area-inset-bottom)) 1rem;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.8rem;
+            flex: 0 0 auto;
         }
+
         .key-btn {
-            background-color: var(--bg-keypad-btn); border: none; border-radius: 12px; color: var(--text-main); font-size: 1.8rem; font-weight: 500; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.1s;
+            background-color: var(--bg-keypad-btn);
+            border: none;
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 1.6rem;
+            font-weight: 500;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
         }
         .key-btn:active { background-color: #384550; }
-        .key-ac { color: #ff6b6b; font-size: 1.4rem; font-weight: 700; }
-        .key-back svg { width: 28px; height: 28px; fill: var(--text-main); }
+        .key-ac { color: #ff6b6b; font-size: 1.3rem; font-weight: 700; }
+        .key-back svg { width: 24px; height: 24px; fill: var(--text-main); }
+
+        /* Mini Toggle */
+        .mini-toggle {
+            width: 36px; height: 20px; background: #384550; border-radius: 20px; position: relative; margin-right: 10px;
+        }
+        .mini-toggle::after {
+            content:''; position: absolute; left: 2px; top: 2px; width: 16px; height: 16px; background: white; border-radius: 50%; transition: 0.3s;
+        }
+        .mini-toggle.checked { background: var(--accent); }
+        .mini-toggle.checked::after { transform: translateX(16px); }
 
         .toast {
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #000; font-weight: 700; padding: 8px 16px; border-radius: 20px; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: black; color: white; padding: 8px 16px; border-radius: 20px; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.3s;
         }
     </style>
 </head>
 <body>
 
-<main class="app-container">
-
     <div id="toast" class="toast">Copied!</div>
 
-    <section id="card-price" class="hero-card active" onclick="setFocus('price')" role="button" aria-label="Original Price">
-        <div class="hero-label">Original Price</div>
-        <div class="hero-value" id="disp-price">0.00</div>
+    <section class="hero-section" onclick="copyTotal()">
+        <div class="hero-label">Total Pay</div>
+        <div class="hero-total" id="disp-total">0.00</div>
+        
+        <div class="hero-badge">
+            <span>You Save</span>
+            <span id="disp-saved">$0.00</span>
+        </div>
     </section>
 
-    <section class="info-grid">
+    <section class="input-list">
         
-        <div id="card-discount" class="card interactive" onclick="setFocus('discount')" role="slider" aria-label="Discount Percentage">
+        <div id="card-price" class="row-card active" onclick="setFocus('price')">
+            <span class="row-label">Original Price</span>
+            <div class="row-value">
+                <span class="row-symbol">$</span>
+                <span id="disp-price">0.00</span>
+            </div>
+        </div>
+
+        <div id="card-discount" class="row-card interactive" onclick="setFocus('discount')">
             <div class="fill-bar" id="fill-discount"></div>
-            <div class="card-content">
-                <label>Discount</label>
-                <div class="big-number">
-                    <span id="disp-discount">0</span><span class="percent-symbol">%</span>
+            <div class="row-content">
+                <span class="row-label">Discount</span>
+                <div class="row-value accent-text">
+                    <span id="disp-discount">0</span>
+                    <span class="row-symbol">%</span>
                 </div>
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-content">
-                <label>You Save</label>
-                <div class="card-value success-text" id="disp-saved">0.00</div>
-            </div>
-        </div>
-
-        <div id="card-tax" class="card interactive" onclick="setFocus('tax')" role="slider" aria-label="Tax Rate">
+        <div id="card-tax" class="row-card interactive" onclick="setFocus('tax')">
             <div class="fill-bar" id="fill-tax"></div>
-            
-            <div class="mini-switch-wrapper" onclick="event.stopPropagation()">
-                <label class="mini-switch">
-                    <input type="checkbox" id="tax-toggle">
-                    <span class="mini-slider"></span>
-                </label>
-            </div>
-
-            <div class="card-content" id="tax-content" style="opacity: 0.3;">
-                <label>Tax</label>
-                <div class="big-number">
-                    <span id="disp-tax">7</span><span class="percent-symbol">%</span>
+            <div class="row-content">
+                <div style="display:flex; align-items:center">
+                    <div id="tax-visual-toggle" class="mini-toggle" onclick="toggleTax(event)"></div>
+                    <span class="row-label">Tax</span>
                 </div>
-            </div>
-        </div>
-
-        <div class="card" onclick="copyTotal()" style="cursor: pointer">
-            <div class="card-content">
-                <label>Final Price</label>
-                <div class="card-value pay-text" id="disp-total">0.00</div>
+                
+                <div class="row-value accent-text" id="tax-value-wrapper" style="opacity: 0.3">
+                    <span id="disp-tax">7</span>
+                    <span class="row-symbol">%</span>
+                </div>
             </div>
         </div>
 
@@ -248,31 +260,33 @@
         </button>
     </section>
 
-</main>
-
 <script>
     // --- STATE ---
     let activeField = 'price'; 
     let state = { price: "", discount: "0", tax: "7" };
+    let taxEnabled = false;
 
     // --- ELEMENTS ---
     const els = {
         priceCard: document.getElementById('card-price'),
         discCard: document.getElementById('card-discount'),
         taxCard: document.getElementById('card-tax'),
+        
         price: document.getElementById('disp-price'),
         discount: document.getElementById('disp-discount'),
         tax: document.getElementById('disp-tax'),
         saved: document.getElementById('disp-saved'),
         total: document.getElementById('disp-total'),
+        
         fillDisc: document.getElementById('fill-discount'),
         fillTax: document.getElementById('fill-tax'),
-        taxToggle: document.getElementById('tax-toggle'),
-        taxContent: document.getElementById('tax-content'),
+        
+        taxToggle: document.getElementById('tax-visual-toggle'),
+        taxWrapper: document.getElementById('tax-value-wrapper'),
         toast: document.getElementById('toast')
     };
 
-    // --- FOCUS LOGIC ---
+    // --- LOGIC ---
     function setFocus(field) {
         activeField = field;
         els.priceCard.classList.toggle('active', field === 'price');
@@ -280,12 +294,18 @@
         els.taxCard.classList.toggle('active', field === 'tax');
     }
 
-    // --- KEYPAD LOGIC ---
+    function toggleTax(e) {
+        e.stopPropagation();
+        taxEnabled = !taxEnabled;
+        els.taxToggle.classList.toggle('checked', taxEnabled);
+        updateUI();
+    }
+
     function pressKey(key) {
         let currentVal = state[activeField];
         if (key === 'AC') {
             state[activeField] = "";
-            if (activeField === 'discount' || activeField === 'tax') state[activeField] = "0";
+            if (activeField !== 'price') state[activeField] = "0";
         } else if (key === 'BACK') {
             state[activeField] = currentVal.slice(0, -1);
             if (state[activeField] === "" && activeField !== 'price') state[activeField] = "0";
@@ -300,7 +320,6 @@
         updateUI();
     }
 
-    // --- CALCULATION & RENDER ---
     function updateUI() {
         let p = state.price ? parseInt(state.price) / 100 : 0;
         let d = parseInt(state.discount) || 0;
@@ -310,12 +329,11 @@
         let subtotal = p - saved;
         
         let taxAmt = 0;
-        let taxOn = els.taxToggle.checked;
-        if (taxOn) {
+        if (taxEnabled) {
             taxAmt = subtotal * (t / 100);
-            els.taxContent.style.opacity = '1';
+            els.taxWrapper.style.opacity = '1';
         } else {
-            els.taxContent.style.opacity = '0.3';
+            els.taxWrapper.style.opacity = '0.3';
         }
 
         let total = subtotal + taxAmt;
@@ -325,18 +343,18 @@
         els.price.textContent = fmt.format(p);
         els.discount.textContent = d;
         els.tax.textContent = t;
-        els.saved.textContent = fmt.format(saved);
+        els.saved.textContent = "$" + fmt.format(saved);
         els.total.textContent = fmt.format(total);
 
         els.fillDisc.style.width = d + '%';
         els.fillTax.style.width = t + '%';
     }
 
-    // --- SCRUBBING (TOUCH SLIDER) LOGIC ---
+    // --- SCRUBBER ---
     function setupScrubber(element, field) {
         let startX = 0; let startVal = 0; let isDragging = false;
         element.addEventListener('touchstart', (e) => {
-            if(e.target.closest('.mini-switch-wrapper')) return;
+            if(e.target.closest('.mini-toggle')) return;
             setFocus(field);
             startX = e.touches[0].clientX;
             startVal = parseInt(state[field]) || 0;
@@ -361,8 +379,6 @@
     setupScrubber(els.discCard, 'discount');
     setupScrubber(els.taxCard, 'tax');
 
-    // --- EXTRAS ---
-    els.taxToggle.addEventListener('change', updateUI);
     function copyTotal() {
         const text = els.total.textContent;
         if (navigator.clipboard) {
@@ -376,6 +392,5 @@
     }
     updateUI();
 </script>
-
 </body>
 </html>
