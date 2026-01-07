@@ -60,23 +60,25 @@
             z-index: 10;
             position: relative;
             cursor: pointer;
+            transition: background-color 0.2s;
         }
+        /* Active state for Hero to give feedback on tap */
+        .hero-section:active { filter: brightness(0.95); }
 
-        /* New Reset Button in Header */
         .reset-btn {
             position: absolute;
             top: calc(env(safe-area-inset-top) + 1rem);
             right: 1.5rem;
             background: rgba(0,0,0,0.1);
             border: none;
-            width: 36px; height: 36px;
+            width: 40px; height: 40px; /* Larger touch target */
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             cursor: pointer;
             transition: background 0.2s;
         }
-        .reset-btn:active { background: rgba(0,0,0,0.2); transform: rotate(-45deg); }
-        .reset-btn svg { width: 20px; height: 20px; fill: var(--hero-text); }
+        .reset-btn:active { background: rgba(0,0,0,0.2); transform: rotate(-15deg); }
+        .reset-btn svg { width: 22px; height: 22px; fill: var(--hero-text); }
 
         .hero-label {
             font-size: 0.9rem; font-weight: 600; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem;
@@ -84,7 +86,11 @@
 
         .hero-total {
             font-size: 4rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; margin-bottom: 0.5rem;
+            /* Setup animation */
+            transition: transform 0.1s;
         }
+        /* The Pulse Animation Class */
+        .bump { transform: scale(1.05); }
 
         .hero-badge {
             background-color: rgba(0,0,0,0.1); padding: 6px 14px; border-radius: 20px; font-weight: 600; font-size: 1rem; display: flex; align-items: center; gap: 6px;
@@ -121,12 +127,11 @@
         }
 
         .key-btn {
-            background-color: var(--bg-keypad-btn); border: none; border-radius: 12px; color: var(--text-main); font-size: 1.6rem; font-weight: 500; height: 60px; display: flex; align-items: center; justify-content: center; cursor: pointer;
+            background-color: var(--bg-keypad-btn); border: none; border-radius: 12px; color: var(--text-main); font-size: 1.6rem; font-weight: 500; height: 60px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.1s;
         }
         .key-btn:active { background-color: #384550; }
         .key-back svg { width: 24px; height: 24px; fill: var(--text-main); }
         
-        /* Style for the new 00 button */
         .key-00 { font-size: 1.3rem; font-weight: 600; letter-spacing: -1px; }
 
         /* Mini Toggle */
@@ -210,9 +215,7 @@
         <button class="key-btn" onclick="pressKey('1')">1</button>
         <button class="key-btn" onclick="pressKey('2')">2</button>
         <button class="key-btn" onclick="pressKey('3')">3</button>
-        
         <button class="key-btn key-00" onclick="pressKey('00')">00</button>
-        
         <button class="key-btn" onclick="pressKey('0')">0</button>
         <button class="key-btn key-back" onclick="pressKey('BACK')">
             <svg viewBox="0 0 24 24"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.88 1.59.88h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/></svg>
@@ -220,33 +223,46 @@
     </section>
 
 <script>
-    // --- STATE ---
-    let activeField = 'price'; 
-    let state = { price: "", discount: "0", tax: "7" };
-    let taxEnabled = false;
+    // --- STATE MANAGEMENT WITH LOCALSTORAGE ---
+    let activeField = 'price';
+    
+    // Load saved tax settings from memory
+    let savedTaxRate = localStorage.getItem('taxRate') || "7";
+    let savedTaxEnabled = localStorage.getItem('taxEnabled') === 'true';
+
+    let state = { price: "", discount: "0", tax: savedTaxRate };
+    let taxEnabled = savedTaxEnabled;
 
     // --- ELEMENTS ---
     const els = {
         priceCard: document.getElementById('card-price'),
         discCard: document.getElementById('card-discount'),
         taxCard: document.getElementById('card-tax'),
-        
         price: document.getElementById('disp-price'),
         discount: document.getElementById('disp-discount'),
         tax: document.getElementById('disp-tax'),
         saved: document.getElementById('disp-saved'),
         total: document.getElementById('disp-total'),
-        
         fillDisc: document.getElementById('fill-discount'),
         fillTax: document.getElementById('fill-tax'),
-        
         taxToggle: document.getElementById('tax-visual-toggle'),
         taxWrapper: document.getElementById('tax-value-wrapper'),
         toast: document.getElementById('toast')
     };
 
+    // --- UTILS ---
+    function vibrate() {
+        if (navigator.vibrate) navigator.vibrate(10); // 10ms lightweight vibration
+    }
+
+    function saveSettings() {
+        localStorage.setItem('taxRate', state.tax);
+        localStorage.setItem('taxEnabled', taxEnabled);
+    }
+
     // --- LOGIC ---
     function setFocus(field) {
+        vibrate();
         activeField = field;
         els.priceCard.classList.toggle('active', field === 'price');
         els.discCard.classList.toggle('active', field === 'discount');
@@ -255,21 +271,25 @@
 
     function toggleTax(e) {
         e.stopPropagation();
+        vibrate();
         taxEnabled = !taxEnabled;
-        els.taxToggle.classList.toggle('checked', taxEnabled);
+        saveSettings(); // Save preference
         updateUI();
     }
 
     function resetApp(e) {
         e.stopPropagation();
-        state = { price: "", discount: "0", tax: "7" };
-        taxEnabled = false;
-        els.taxToggle.classList.remove('checked');
+        vibrate();
+        // Reset price and discount, but KEEP saved tax settings
+        state.price = "";
+        state.discount = "0";
+        // We do NOT reset tax rate or taxEnabled here as user preference usually stays
         setFocus('price');
         updateUI();
     }
 
     function pressKey(key) {
+        vibrate(); // Feedback
         let currentVal = state[activeField];
 
         if (key === 'BACK') {
@@ -277,16 +297,11 @@
             if (state[activeField] === "" && activeField !== 'price') state[activeField] = "0";
         } 
         else if (key === '00') {
-            // Logic for 00
             if (activeField === 'price') {
-                // Prevent overflowing reasonable limits
                 if (currentVal.length < 8) state.price += "00";
             } else {
-                // For Discount/Tax, 00 is rarely valid (e.g. 100 is max), 
-                // but we allow typing "0" logic twice if user really wants to.
-                // Usually 00 is just 0 in these fields.
                 if (currentVal === "0" || currentVal === "") {
-                    state[activeField] = "0"; // 00 becomes 0
+                    state[activeField] = "0"; 
                 } else {
                     let nextVal = currentVal + "00";
                     if (parseInt(nextVal) <= 100) state[activeField] = nextVal;
@@ -301,10 +316,22 @@
                 if (parseInt(nextVal) <= 100) state[activeField] = nextVal;
             }
         }
+        
+        // If we changed tax, save it
+        if (activeField === 'tax') saveSettings();
+        
         updateUI();
+        
+        // Trigger "Bump" animation on total
+        els.total.classList.remove('bump');
+        void els.total.offsetWidth; // Trigger reflow
+        els.total.classList.add('bump');
     }
 
     function updateUI() {
+        // Sync toggle visual
+        els.taxToggle.classList.toggle('checked', taxEnabled);
+
         let p = state.price ? parseInt(state.price) / 100 : 0;
         let d = parseInt(state.discount) || 0;
         let t = parseInt(state.tax) || 0;
@@ -339,7 +366,7 @@
         let startX = 0; let startVal = 0; let isDragging = false;
         element.addEventListener('touchstart', (e) => {
             if(e.target.closest('.mini-toggle')) return;
-            setFocus(field);
+            setFocus(field); // This now triggers vibrate too
             startX = e.touches[0].clientX;
             startVal = parseInt(state[field]) || 0;
             isDragging = false;
@@ -354,7 +381,12 @@
                 let change = Math.round(deltaX / 2); 
                 let newVal = startVal + change;
                 if (newVal < 0) newVal = 0; if (newVal > 100) newVal = 100;
+                
+                // Only vibrate on change if using a "tick" logic, but standard vibrate on drag is too much.
+                // We will save only on drag end or every update?
+                // For performance, just update state.
                 state[field] = newVal.toString();
+                if (field === 'tax') saveSettings();
                 updateUI();
             }
         }, { passive: false });
@@ -364,6 +396,7 @@
     setupScrubber(els.taxCard, 'tax');
 
     function copyTotal() {
+        vibrate();
         const text = els.total.textContent;
         if (navigator.clipboard) {
             navigator.clipboard.writeText(text);
@@ -374,6 +407,8 @@
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
     }
+    
+    // Init
     updateUI();
 </script>
 </body>
